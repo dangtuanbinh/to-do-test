@@ -1,59 +1,73 @@
 // src/App.tsx
 import React, { useEffect, useState } from 'react';
 import { Tabs, message } from 'antd';
+import { useDispatch, useSelector } from 'react-redux';
+
 import TaskForm from './components/TaskForm';
 import TaskList from './components/TaskList';
-import { fetchTasks, addTask, toggleTaskCompletion } from './services/api';
+import { taskApis, useAddTaskMutation, useGetTaskListQuery, useUpdateTaskStatusMutation } from './store/components/taskList/taskApis';
+import { ITask } from './utils/types/commonTypes';
+import { getTaskList } from './store/rootSelector';
 
 const { TabPane } = Tabs;
 
 const App: React.FC = () => {
-    const [tasks, setTasks] = useState<{ id: number; title: string; completed: boolean }[]>([]);
-    const [filter, setFilter] = useState<'all' | 'completed' | 'incomplete'>('all');
+    const dispatch = useDispatch();
 
-    useEffect(() => {
-        const loadTasks = async () => {
-            const initialTasks = await fetchTasks();
-            setTasks(initialTasks);
-        };
-        loadTasks();
-    }, []);
+    const { data: tasks = [], error, isLoading } = useGetTaskListQuery(); 
+    const taskList = useSelector(getTaskList);
+    const [addTaskMutation] = useAddTaskMutation();
+    const [updateTaskStatus] = useUpdateTaskStatusMutation();
 
-    const handleAddTask = async (title: string) => {
+    const [filter, setFilter] = useState<'all' | 'completed' | 'incompleted'>('all');
+
+    const handleAddTask = async (title: string, status: string) => {
         try {
-            const newTask = await addTask({ title });
-            setTasks((prev) => [...prev, newTask]);
+            const newTask = await addTaskMutation({ title, status }).unwrap();
+            taskList.push(newTask);
+            message.success('Task added successfully'); 
         } catch (error) {
-            message.error('Failed to add task');
+            console.error("Failed create task:", error);
         }
     };
 
-    const handleToggleTask = async (id: number, completed: boolean) => {
+    const handleCompleteTask = async (taskId: number) => {
         try {
-            await toggleTaskCompletion(id, completed);
-            setTasks((prev) =>
-                prev.map((task) => (task.id === id ? { ...task, completed } : task))
-            );
+            const updatedTask = await updateTaskStatus({ id: taskId, status: "completed" }).unwrap();
+
+            const taskToUpdate = taskList.find((task: ITask) => task.id === taskId);
+            if (taskToUpdate) {
+                taskToUpdate.status = updatedTask.status; 
+                message.success("Task updated successfully!");
+            }
         } catch (error) {
-            message.error('Failed to update task');
+            console.error("Failed to update task status:", error);  
         }
     };
 
-    const filteredTasks = tasks.filter((task) => {
-        if (filter === 'completed') return task.completed;
-        if (filter === 'incomplete') return !task.completed;
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+
+    if (error) {
+        return <div>Error fetching tasks</div>; 
+    }
+
+    const filteredTasks = taskList.filter((task: ITask) => {
+        if (filter === 'completed') return task.status === 'completed';
+        if (filter === 'incompleted') return task.status === 'incompleted';
         return true; // 'all'
     });
 
     return (
         <div style={{ padding: 20 }}>
             <TaskForm onAddTask={handleAddTask} />
-            <Tabs defaultActiveKey="1" onChange={(key) => setFilter(key as 'all' | 'completed' | 'incomplete')}>
+            <Tabs defaultActiveKey="1" onChange={(key) => setFilter(key as 'all' | 'completed' | 'incompleted')}>
                 <TabPane tab="All" key="all" />
                 <TabPane tab="Completed" key="completed" />
-                <TabPane tab="Incomplete" key="incomplete" />
+                <TabPane tab="Incompleted" key="incompleted" />
             </Tabs>
-            <TaskList tasks={filteredTasks} onToggle={handleToggleTask} />
+            <TaskList tasks={filteredTasks} onToggle={handleCompleteTask} />
         </div>
     );
 };

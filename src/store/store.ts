@@ -1,7 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
+import taskReducer from "./components/taskList/taskSlices"
+import { taskApis } from "./components/taskList/taskApis";
 
 const rootReducer = {
-
+  [taskApis.reducerPath]: taskApis.reducer,
+  task: taskReducer
 };
 
 const store = configureStore({
@@ -9,7 +12,7 @@ const store = configureStore({
   middleware: (getDefaultMiddleware: any) =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }).concat([]),
+    }).concat([taskApis.middleware]),
 });
 
 export default store;

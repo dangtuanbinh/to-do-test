@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Input, Button } from 'antd';
 
 interface ITaskFormProps {
-    onAddTask: (title: string) => void;
+    onAddTask: (title: string, status: string) => void;
 }
 
 const TaskForm: React.FC<ITaskFormProps> = (props) => {
@@ -13,7 +13,7 @@ const TaskForm: React.FC<ITaskFormProps> = (props) => {
 
     const handleSubmit = () => {
         if (title.trim()) {
-            onAddTask(title);
+            onAddTask(title, 'incompleted');
             setTitle('');
         }
     };
@@ -26,7 +26,7 @@ const TaskForm: React.FC<ITaskFormProps> = (props) => {
                 placeholder="Add a new task"
                 style={{ width: 300, marginRight: 10 }}
             />
-            <Button onClick={handleSubmit} type="primary">Add Task</Button>
+            <Button onClick={handleSubmit} type="primary" disabled={!title}>Add Task</Button>
         </div>
     );
 };

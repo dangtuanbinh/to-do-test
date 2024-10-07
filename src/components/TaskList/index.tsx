@@ -1,10 +1,11 @@
 // src/components/TaskList.tsx
 import React from 'react';
 import TaskItem from '../TaskItem';
+import { ITask } from 'src/utils/types/commonTypes';
 
 interface ITaskListProps {
-    tasks: { id: number; title: string; completed: boolean }[];
-    onToggle: (id: number, completed: boolean) => void;
+    tasks: ITask[];
+    onToggle: (id: number) => void;
 }
 
 const TaskList: React.FC<ITaskListProps> = (props) => {

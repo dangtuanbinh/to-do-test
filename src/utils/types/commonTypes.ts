@@ -1,8 +1,8 @@
-export interface IPaginationProps {
-  current:number;
-  itemsPerPage: number;
-  totalItems: number;
-  paginate: (pageNumber: number) => void;
+export interface ITask {
+  id: number;
+  title: string;
+  description: string;
+  status: 'completed' | 'incompleted'
 }
 
 
